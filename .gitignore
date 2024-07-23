@@ -1,0 +1,10 @@
+# Binaries
+disposable-chat
+./*/disposable-chat
+
+# Editor directories
+.vscode
+.idea
+
+# Environment
+.env
