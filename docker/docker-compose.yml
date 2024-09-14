@@ -4,9 +4,6 @@ services:
     build:
       context: ../
       dockerfile: ./docker/server.Dockerfile
-    environment:
-      SERVER_HOST: localhost
-      SERVER_PORT: 3000
     networks:
       - proxy
       - rds
@@ -20,7 +17,7 @@ services:
         condition: service_healthy
     labels:
         - traefik.http.routers.socket-router.rule=PathPrefix(`/ws`)
-        - traefik.http.services.chat.loadbalancer.server.port=3000
+        - traefik.http.services.chat.loadbalancer.server.port=80
 
   redis:
     image: redis/redis-stack
