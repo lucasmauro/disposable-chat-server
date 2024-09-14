@@ -7,51 +7,34 @@ on:
     - master
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-  attestations: write
-  packages: write
+  ECR_REPOSITORY: disposable-chat-server
 
 jobs:
   build-deploy:
+    name: Build and Push to ECR
     runs-on: ubuntu-latest
+
     steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        - name: Log in to the Container registry
-          uses: docker/login-action@v2
-          with:
-            registry: ${{ env.REGISTRY }}
-            username: ${{ github.actor }}
-            password: ${{ secrets.GH_PAT }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-        - name: Extract metadata (tags, labels) for Docker
-          id: meta
-          uses: docker/metadata-action@v4
-          with:
-            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-        - name: Build and push Docker image
-          id: push
-          uses: docker/build-push-action@v5
-          with:
-            context: .
-            push: true
-            file: ./docker/server.Dockerfile
-            build-args: |
-              CLIENT_PORT=${{ env.PORT }}
-            tags: ${{ steps.meta.outputs.tags }}
-            labels: ${{ steps.meta.outputs.labels }}
-
-        - name: Generate artifact attestation
-          uses: actions/attest-build-provenance@v1
-          with:
-            subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-            subject-digest: ${{ steps.push.outputs.digest }}
-            push-to-registry: true
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -f docker/server.Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
