@@ -8,3 +8,5 @@ disposable-chat
 
 # Environment
 .env
+
+.terraform*
