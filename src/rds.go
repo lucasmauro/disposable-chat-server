@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/tls"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/redis/go-redis/v9"
@@ -11,16 +13,27 @@ import (
 var initPublisherOnce sync.Once
 var initSubscriberOnce sync.Once
 var initCacheOnce sync.Once
+var getOptionsOnce sync.Once
 
 var publisher *redis.Client
 var subscriber *redis.Client
 var cache *redis.Client
+var options *redis.Options
 
 func getOptions() *redis.Options {
-	return &redis.Options{
-		Addr:     os.Getenv("REDIS_ENDPOINT"),
-		Password: os.Getenv("REDIS_SECRET"),
-	}
+	getOptionsOnce.Do(func() {
+		options = &redis.Options{
+			Addr:     os.Getenv("REDIS_ENDPOINT"),
+			Password: os.Getenv("REDIS_SECRET"),
+		}
+		isDevelopment, _ := strconv.ParseBool(os.Getenv("DEVELOPMENT"))
+		if !isDevelopment {
+			options.TLSConfig = &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			}
+		}
+	})
+	return options
 }
 
 func publish(roomName *string, message []byte) {

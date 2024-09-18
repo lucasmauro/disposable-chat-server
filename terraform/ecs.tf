@@ -43,12 +43,27 @@ resource "aws_ecs_task_definition" "task" {
         },
         {
           "name": "REDIS_ENDPOINT",
-          "value": aws_elasticache_replication_group.redis.primary_endpoint_address
+          "value": "${aws_elasticache_replication_group.redis.configuration_endpoint_address}:6379"
+        },
+        {
+          "name": "DEVELOPMENT",
+          "value": "true"
         }
-      ]
+      ],
+      "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+              "awslogs-group": "/ecs/disposable-chat-server",
+              "awslogs-region": "us-east-1"
+              "awslogs-stream-prefix": "disposable-chat"
+          }
+      },
     }
   ])
 }
+
+# TODO: Remove DEVELOPMENT
+# TODO: Remove logConfiguration
 
 resource "aws_ecs_service" "service" {
   name                 = "disposable-chat-server"
@@ -75,3 +90,12 @@ resource "aws_ecs_service" "service" {
   }
 }
 
+resource "aws_ecs_cluster_capacity_providers" "fargate" {
+  cluster_name = aws_ecs_cluster.cluster.name
+
+  capacity_providers = ["FARGATE"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+  }
+}

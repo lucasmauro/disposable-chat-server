@@ -22,6 +22,34 @@ resource "aws_subnet" "us_east_1c" {
   availability_zone = "us-east-1c"
 }
 
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.disposable_chat.id
+}
+
+resource "aws_route_table" "routes" {
+  vpc_id = aws_vpc.disposable_chat.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+}
+
+resource "aws_route_table_association" "subnet_1a" {
+  subnet_id      = aws_subnet.us_east_1a.id
+  route_table_id = aws_route_table.routes.id
+}
+
+resource "aws_route_table_association" "subnet_1b" {
+  subnet_id      = aws_subnet.us_east_1b.id
+  route_table_id = aws_route_table.routes.id
+}
+
+resource "aws_route_table_association" "subnet_1c" {
+  subnet_id      = aws_subnet.us_east_1c.id
+  route_table_id = aws_route_table.routes.id
+}
+
 resource "aws_elasticache_subnet_group" "disposable_chat" {
   name       = "disposable-chat-server-subnet-group"
   subnet_ids = [
@@ -39,25 +67,33 @@ resource "aws_security_group" "disposable_chat" {
 resource "aws_vpc_security_group_ingress_rule" "allow_1a" {
   security_group_id = aws_security_group.disposable_chat.id
   cidr_ipv4         = aws_subnet.us_east_1a.cidr_block
-  from_port         = 0
-  to_port           = 65535
+  from_port         = -1
+  to_port           = -1
   ip_protocol       = -1
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_1b" {
   security_group_id = aws_security_group.disposable_chat.id
   cidr_ipv4         = aws_subnet.us_east_1b.cidr_block
-  from_port         = 0
-  to_port           = 65535
+  from_port         = -1
+  to_port           = -1
   ip_protocol       = -1
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_1c" {
   security_group_id = aws_security_group.disposable_chat.id
   cidr_ipv4         = aws_subnet.us_east_1c.cidr_block
-  from_port         = 0
-  to_port           = 65535
+  from_port         = -1
+  to_port           = -1
   ip_protocol       = -1
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_tcp_80" {
+  security_group_id = aws_security_group.disposable_chat.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = "80"
+  to_port           = "80"
+  ip_protocol       = "tcp"
 }
 
 resource "aws_vpc_security_group_egress_rule" "allow_all" {

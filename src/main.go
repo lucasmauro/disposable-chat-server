@@ -56,8 +56,8 @@ func main() {
 	increaseSystemUlimit()
 
 	godotenv.Load()
-	isDevelopment, _ := strconv.ParseBool(os.Getenv("DEVELOPMENT"))
-	if isDevelopment {
+	isDebug, _ := strconv.ParseBool(os.Getenv("DEBUG"))
+	if isDebug {
 		log.SetLevel(log.DebugLevel)
 	}
 
