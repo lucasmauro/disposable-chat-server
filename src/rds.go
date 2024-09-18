@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto/tls"
 	"os"
-	"strconv"
 	"sync"
 
 	"github.com/redis/go-redis/v9"
@@ -25,12 +23,6 @@ func getOptions() *redis.Options {
 		options = &redis.Options{
 			Addr:     os.Getenv("REDIS_ENDPOINT"),
 			Password: os.Getenv("REDIS_SECRET"),
-		}
-		isDevelopment, _ := strconv.ParseBool(os.Getenv("DEVELOPMENT"))
-		if !isDevelopment {
-			options.TLSConfig = &tls.Config{
-				MinVersion: tls.VersionTLS12,
-			}
 		}
 	})
 	return options

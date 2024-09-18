@@ -43,15 +43,7 @@ resource "aws_iam_role" "ecs_role" {
                   }
               }
           },
-          {
-              "Effect": "Allow",
-              "Action": [
-                  "logs:*"
-              ],
-              "Resource": "*"
-          }
       ]
     })
   }
 }
-# TODO: Remove the one below

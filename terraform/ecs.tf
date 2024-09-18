@@ -25,7 +25,6 @@ resource "aws_ecs_task_definition" "task" {
       image     = data.aws_ecr_image.server.image_uri
       cpu       = 1024
       memory    = 2048
-      essential = true
       portMappings = [
         {
           containerPort = 80
@@ -43,10 +42,10 @@ resource "aws_ecs_task_definition" "task" {
         },
         {
           "name": "REDIS_ENDPOINT",
-          "value": "${aws_elasticache_replication_group.redis.configuration_endpoint_address}:6379"
+          "value": "${aws_elasticache_cluster.redis.cache_nodes[0].address}:${aws_elasticache_cluster.redis.cache_nodes[0].port}"
         },
         {
-          "name": "DEVELOPMENT",
+          "name": "DEBUG",
           "value": "true"
         }
       ],
@@ -61,9 +60,6 @@ resource "aws_ecs_task_definition" "task" {
     }
   ])
 }
-
-# TODO: Remove DEVELOPMENT
-# TODO: Remove logConfiguration
 
 resource "aws_ecs_service" "service" {
   name                 = "disposable-chat-server"
